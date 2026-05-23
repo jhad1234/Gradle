@@ -22,46 +22,24 @@ jobs:
           java-version: 17
           cache: gradle
 
-      # 🛠️ 3. الخطوة الإنقاذية لضمان عدم فشل البناء (توليد الـ gradlew تلقائياً)
+      # 3. إنشاء ملفات الـ Wrapper وتحديد مسار العمل الصحيح
       - name: Ensure Gradle Wrapper exists
         run: gradle wrapper
+        working-directory: ./mediator-
 
-      # 4. إعطاء صلاحية التشغيل للملف المولد
+      # 4. إعطاء صلاحية التشغيل لملف gradlew داخل المجلد الصحيح
       - name: Grant execute permission
         run: chmod +x gradlew
+        working-directory: ./mediator-
 
-      # 5. فك تشفير الـ Keystore بأمان من إعدادات الحساب
-      - name: Decode Keystore
-        run: |
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > release.keystore
+      # 5. بناء التطبيق وتصدير ملف الـ APK
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug
+        working-directory: ./mediator-
 
-      # 6. بناء ملف الـ APK بنمط الـ Release
-      - name: Build Release APK
-        run: ./gradlew assembleRelease
-
-      # 7. توقيع التطبيق رسمياً لحمايته من التعديل والمحاكاة
-      - name: Sign APK
-        run: |
-          $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
-            --ks release.keystore \
-            --ks-key-alias "${{ secrets.ANDROID_KEY_ALIAS }}" \
-            --ks-pass pass:"${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
-            --key-pass pass:"${{ secrets.ANDROID_KEY_PASSWORD }}" \
-            --out app-release-signed.apk \
-            app/build/outputs/apk/release/app-release-unsigned.apk
-
-      # 8. التحقق التقني من صحة التوقيع الرقمي
-      - name: Verify APK Signature
-        run: |
-          $ANDROID_HOME/build-tools/34.0.0/apksigner verify app-release-signed.apk
-
-      # 9. توليد رابط تحميل مباشر للنسخة المحدثة النهائية في أسفل المستودع
-      - name: Create GitHub Release
-        uses: marvinpinto/action-automatic-releases@latest
+      # 6. رفع ملف الـ APK الناتج كنسخة جاهزة للتحميل
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          automatic_release_tag: latest-production-v1.0
-          prerelease: false
-          title: "📥 تحميل النسخة النهائية للتطبيق"
-          files: |
-            app-release-signed.apk
+          name: app-debug-apk
+          path: mediator-/app/build/outputs/apk/debug/app-debug.apk
