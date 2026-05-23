@@ -24,15 +24,28 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
-    - name: Compile Code and Build APK
-      run: ./gradlew assembleDebug
+    - name: Compile Code and Build Release APK
+      run: ./gradlew assembleRelease
+
+    - name: Sign APK
+      run: |
+        jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
+          -keystore ${{ secrets.ANDROID_KEYSTORE }} \
+          app/build/outputs/apk/release/app-release-unsigned.apk \
+          ${{ secrets.ANDROID_KEY_ALIAS }}
+
+    - name: Optimize APK with zipalign
+      run: |
+        $ANDROID_HOME/build-tools/34.0.0/zipalign -v -p 4 \
+          app/build/outputs/apk/release/app-release-unsigned.apk \
+          app/build/outputs/apk/release/app-release.apk
 
     - name: Create Production Release with Download Link
       uses: marvinpinto/action-automatic-releases@latest
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: "latest-working-v1.0"
+        automatic_release_tag: "latest-production-v1.0"
         prerelease: false
-        title: "📥 اضغط هنا لتحميل وتثبيت التطبيق الوسيط الموحد شغال 100%"
+        title: "📥 اضغط هنا لتحميل وتثبيت النسخة النهائية للتطبيق"
         files: |
-          app/build/outputs/apk/debug/app-debug.apk
+          app/build/outputs/apk/release/app-release.apk
