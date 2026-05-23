@@ -22,24 +22,31 @@ jobs:
           java-version: 17
           cache: gradle
 
-      # 3. إنشاء ملفات الـ Wrapper وتحديد مسار العمل الصحيح
-      - name: Ensure Gradle Wrapper exists
-        run: gradle wrapper
-        working-directory: ./mediator-
+      # 3. خطوة ذكية للبحث عن مجلد الأندرويد الفعلي والدخول إليه تلقائياً لبناء التطبيق
+      - name: Locate Project and Build APK
+        run: |
+          # البحث عن المجلد الذي يحتوي على ملف الإعدادات أو مجلد src
+          TARGET_DIR=$(find . -name "build.gradle" -not -path "*/build/*" | head -n 1 | xargs dirname)
+          echo "تم العثور على مشروع أندرويد في المسار: $TARGET_DIR"
+          
+          cd "$TARGET_DIR"
+          
+          # توليد الـ wrapper محلياً بالسيرفر إذا كان مفقوداً
+          gradle wrapper
+          
+          # إعطاء صلاحيات التشغيل
+          chmod +x gradlew
+          
+          # تجميع التطبيق بنمط الـ Debug
+          ./gradlew assembleDebug
+          
+          # نقل ملف الـ APK الناتج إلى المجلد الرئيسي لتسهيل رفعه
+          mkdir -p $GITHUB_WORKSPACE/output_apk
+          find . -name "*.apk" -exec cp {} $GITHUB_WORKSPACE/output_apk/ \;
 
-      # 4. إعطاء صلاحية التشغيل لملف gradlew داخل المجلد الصحيح
-      - name: Grant execute permission
-        run: chmod +x gradlew
-        working-directory: ./mediator-
-
-      # 5. بناء التطبيق وتصدير ملف الـ APK
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug
-        working-directory: ./mediator-
-
-      # 6. رفع ملف الـ APK الناتج كنسخة جاهزة للتحميل
-      - name: Upload Artifact
+      # 4. رفع ملف الـ APK الناتج مباشرة لتتمكن من تحميله من صفحة الـ Actions
+      - name: Upload Generated APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug-apk
-          path: mediator-/app/build/outputs/apk/debug/app-debug.apk
+          name: yemen-telecom-app
+          path: output_apk/
