@@ -5,63 +5,97 @@
     android:background="#121212"
     android:padding="20dp">
 
+    <!-- العنوان الرئيسي -->
     <TextView
         android:id="@+id/app_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="40dp"
-        android:text="المنظومة الموحدة لتخطي النطاقات"
+        android:layout_marginTop="20dp"
+        android:text="المنظومة الموحدة الذكية"
         android:textColor="#FFFFFF"
         android:textSize="22sp"
         android:textStyle="bold" />
 
-    <TextView
-        android:id="@+id/app_subtitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/app_title"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="5dp"
-        android:text="تعديل وتزوير حزم الـ HLR تلقائياً"
-        android:textColor="#777777"
-        android:textSize="14sp" />
-
-    <Button
-        android:id="@+id/btn_toggle"
-        android:layout_width="240dp"
-        android:layout_height="240dp"
-        android:layout_centerInParent="true"
-        android:background="@android:color/transparent"
-        android:text="تفعيل الخداع الجغرافي"
-        android:textColor="#FFFFFF"
-        android:textSize="18sp"
-        android:textStyle="bold" />
-
+    <!-- حقل إدخال الرقم المراد فحص نطاقه -->
     <LinearLayout
+        android:id="@+id/input_area"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_marginBottom="40dp"
-        android:background="#1E1E1E"
+        android:layout_below="@id/app_title"
+        android:layout_marginTop="25dp"
         android:orientation="vertical"
+        android:background="#1E1E1E"
         android:padding="15dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="right"
-            android:text="مراقب الحزم النشط:"
+            android:text="أدخل الرقم المراد فحص نطاقه الجغرافي:"
             android:textColor="#AAAAAA"
-            android:textSize="14sp"
+            android:textSize="14sp" />
+
+        <EditText
+            android:id="@+id/edt_phone_number"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginTop="10dp"
+            android:background="#2D2D2D"
+            android:hint="مثال: 77xxxxxxx أو 73xxxxxxx"
+            android:inputType="phone"
+            android:padding="10dp"
+            android:gravity="center"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#555555" />
+
+        <Button
+            android:id="@+id/btn_check_region"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:backgroundTint="#3498DB"
+            android:text="تحليل النطاق الجغرافي الحالي"
+            android:textColor="#FFFFFF"
             android:textStyle="bold" />
 
-        <View
+        <!-- نص نتيجة الفحص والتحليل -->
+        <TextView
+            android:id="@+id/txt_region_result"
             android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginTop="5dp"
-            android:layout_marginBottom="10dp"
-            android:background="#333333" />
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="center"
+            android:text="حالة النطاق: بانتظار إدخال الرقم..."
+            android:textColor="#FFFF00"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- زر التفعيل الرئيسي الذكي للتحويل والاتصال -->
+    <Button
+        android:id="@+id/btn_toggle"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_below="@id/input_area"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="30dp"
+        android:background="@android:color/transparent"
+        android:text="تفعيل التوجيه الجغرافي"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:enabled="false" /> <!-- ينشط فقط بعد الفحص والتأكيد -->
+
+    <!-- لوحة المراقبة السفلية للشبكات -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="20dp"
+        android:background="#1E1E1E"
+        android:orientation="vertical"
+        android:padding="12dp">
 
         <TableRow
             android:layout_width="match_parent"
@@ -75,7 +109,7 @@
                 android:gravity="center"
                 android:text="● يمن موبايل / 4G"
                 android:textColor="#555555"
-                android:textSize="14sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/status_you"
                 android:layout_width="0dp"
@@ -84,32 +118,7 @@
                 android:gravity="center"
                 android:text="● شركة يو YOU"
                 android:textColor="#555555"
-                android:textSize="14sp" />
-        </TableRow>
-
-        <TableRow
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:weightSum="2">
-            <TextView
-                android:id="@+id/status_sabafon"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:text="● سبأفون جنوب"
-                android:textColor="#555555"
-                android:textSize="14sp" />
-            <TextView
-                android:id="@+id/status_yemen_net"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:text="● يمن نت / عدن نت"
-                android:textColor="#555555"
-                android:textSize="14sp" />
+                android:textSize="13sp" />
         </TableRow>
     </LinearLayout>
 </RelativeLayout>
