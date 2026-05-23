@@ -2,50 +2,66 @@ name: Generate Production APK Automatically
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Source Code
-      uses: actions/checkout@v4
+      # 1. تحميل الكود من المستودع
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: gradle
+      # 2. تثبيت بيئة Java 17
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
+      # 🛠️ 3. الخطوة الإنقاذية لضمان عدم فشل البناء (توليد الـ gradlew تلقائياً)
+      - name: Ensure Gradle Wrapper exists
+        run: gradle wrapper
 
-    - name: Compile Code and Build Release APK
-      run: ./gradlew assembleRelease
+      # 4. إعطاء صلاحية التشغيل للملف المولد
+      - name: Grant execute permission
+        run: chmod +x gradlew
 
-    - name: Sign APK
-      run: |
-        jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
-          -keystore ${{ secrets.ANDROID_KEYSTORE }} \
-          app/build/outputs/apk/release/app-release-unsigned.apk \
-          ${{ secrets.ANDROID_KEY_ALIAS }}
+      # 5. فك تشفير الـ Keystore بأمان من إعدادات الحساب
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > release.keystore
 
-    - name: Optimize APK with zipalign
-      run: |
-        $ANDROID_HOME/build-tools/34.0.0/zipalign -v -p 4 \
-          app/build/outputs/apk/release/app-release-unsigned.apk \
-          app/build/outputs/apk/release/app-release.apk
+      # 6. بناء ملف الـ APK بنمط الـ Release
+      - name: Build Release APK
+        run: ./gradlew assembleRelease
 
-    - name: Create Production Release with Download Link
-      uses: marvinpinto/action-automatic-releases@latest
-      with:
-        repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: "latest-production-v1.0"
-        prerelease: false
-        title: "📥 اضغط هنا لتحميل وتثبيت النسخة النهائية للتطبيق"
-        files: |
-          app/build/outputs/apk/release/app-release.apk
+      # 7. توقيع التطبيق رسمياً لحمايته من التعديل والمحاكاة
+      - name: Sign APK
+        run: |
+          $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
+            --ks release.keystore \
+            --ks-key-alias "${{ secrets.ANDROID_KEY_ALIAS }}" \
+            --ks-pass pass:"${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
+            --key-pass pass:"${{ secrets.ANDROID_KEY_PASSWORD }}" \
+            --out app-release-signed.apk \
+            app/build/outputs/apk/release/app-release-unsigned.apk
+
+      # 8. التحقق التقني من صحة التوقيع الرقمي
+      - name: Verify APK Signature
+        run: |
+          $ANDROID_HOME/build-tools/34.0.0/apksigner verify app-release-signed.apk
+
+      # 9. توليد رابط تحميل مباشر للنسخة المحدثة النهائية في أسفل المستودع
+      - name: Create GitHub Release
+        uses: marvinpinto/action-automatic-releases@latest
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          automatic_release_tag: latest-production-v1.0
+          prerelease: false
+          title: "📥 تحميل النسخة النهائية للتطبيق"
+          files: |
+            app-release-signed.apk
