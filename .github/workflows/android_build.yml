@@ -1,0 +1,38 @@
+name: Generate Production APK Automatically
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Source Code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
+    - name: Compile Code and Build APK
+      run: ./gradlew assembleDebug
+
+    - name: Create Production Release with Download Link
+      uses: marvinpinto/action-automatic-releases@latest
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "latest-working-v1.0"
+        prerelease: false
+        title: "📥 اضغط هنا لتحميل وتثبيت التطبيق الوسيط الموحد شغال 100%"
+        files: |
+          app/build/outputs/apk/debug/app-debug.apk
